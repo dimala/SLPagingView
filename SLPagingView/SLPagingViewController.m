@@ -11,8 +11,8 @@
 @interface SLPagingViewController () <UIScrollViewDelegate>
 
 @property (nonatomic, strong) UIScrollView *scrollView;
-@property (nonatomic, strong) UIPageControl *pageControl;
-@property (nonatomic, strong) UIView *navigationBarView;
+@property (nonatomic, strong, readwrite) UIPageControl *pageControl;
+@property (nonatomic, strong, readwrite) UIView *navigationBarView;
 @property (nonatomic, strong) NSMutableArray *navItemsViews;
 @property (nonatomic, strong) NSMutableArray *controllerReferences;
 @property (nonatomic) BOOL needToShowPageControl;
@@ -163,6 +163,9 @@
 
 - (void)loadView {
     [super loadView];
+
+
+
     // Notify all conctrollers
     [self notifyControllers:NSSelectorFromString(@"loadView")
                      object:nil
@@ -229,8 +232,7 @@
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    
-    self.navigationBarView.frame = (CGRect){0, 0, SCREEN_SIZE.width, 44};
+
 }
 
 #pragma mark - public methods
@@ -336,7 +338,7 @@
     CGFloat distance = (SCREEN_SIZE.width/2) - self.navigationSideItemsStyle;
     CGSize vSize = ([v isKindOfClass:[UILabel class]])? [self getLabelSize:(UILabel*)v] : v.frame.size;
     CGFloat originX = (SCREEN_SIZE.width/2 - vSize.width/2) + self.navItemsViews.count*distance;
-    v.frame = (CGRect){originX, 8, vSize.width, vSize.height};
+    v.frame = (CGRect){originX, self.navigationBarItemsTopMargin, vSize.width, vSize.height};
     v.tag = tag;
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                           action:@selector(tapOnHeader:)];
@@ -378,14 +380,20 @@
     if(self.needToShowPageControl){
         // Make the page control
         self.pageControl               = [[UIPageControl alloc] init];
-        self.pageControl.frame         = (CGRect){0, 35, 0, 0};
+        self.pageControl.frame         = (CGRect){0, self.pageControlTopMargin, 0, 0};
         self.pageControl.numberOfPages = self.navigationBarView.subviews.count;
         self.pageControl.currentPage   = 0;
         if(self.currentPageControlColor) self.pageControl.currentPageIndicatorTintColor = self.currentPageControlColor;
         if(self.tintPageControlColor) self.pageControl.pageIndicatorTintColor = self.tintPageControlColor;
         [self.navigationBarView addSubview:self.pageControl];
     }
-    [self.navigationController.navigationBar addSubview:self.navigationBarView];
+
+    if (self.isNavigationBarStatic) {
+        [self.navigationController.navigationBar addSubview:self.navigationBarView];
+    } else {
+        [self.view addSubview:self.navigationBarView];
+    }
+
 }
 
 // Add all views
@@ -408,13 +416,13 @@
                                                                        multiplier:1.0
                                                                          constant:0]];
             // Height constraint, half of parent view height
-            [self.scrollView addConstraint:[NSLayoutConstraint constraintWithItem:v
-                                                                        attribute:NSLayoutAttributeHeight
-                                                                        relatedBy:NSLayoutRelationEqual
-                                                                           toItem:self.scrollView
-                                                                        attribute:NSLayoutAttributeHeight
-                                                                       multiplier:1.0
-                                                                         constant:0]];
+//            [self.scrollView addConstraint:[NSLayoutConstraint constraintWithItem:v
+//                                                                        attribute:NSLayoutAttributeHeight
+//                                                                        relatedBy:NSLayoutRelationEqual
+//                                                                           toItem:self.scrollView
+//                                                                        attribute:NSLayoutAttributeHeight
+//                                                                       multiplier:1.0
+//                                                                         constant:0]];
             UIView *previous = [self.viewControllers objectForKey:[NSNumber numberWithFloat:([key intValue] - 1)]];
             if(previous)
                 // Distance constraint: set distance between previous view and the current one
@@ -423,11 +431,19 @@
                                                                                         metrics:nil
                                                                                           views:@{@"v" : v,
                                                                                                   @"previous" : previous}]];
+
+            [self.view addSubview:self.navigationBarView];
+            [self.navigationBarView setTranslatesAutoresizingMaskIntoConstraints:NO];
             // Oridnate constraint : set the space between the Top and the current view
-            [self.scrollView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|-%f-[v]", CGRectGetHeight(self.navigationBarView.frame)]
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|[v][navigationBar(%f)]|", self.navigationBarHeight]
                                                                                     options:0
                                                                                     metrics:nil
-                                                                                      views:@{@"v" : v}]];
+                                                                                      views:@{@"v" : v, @"navigationBar": self.navigationBarView}]];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[navigationBar]|"
+                                                                                    options:0
+                                                                                    metrics:nil
+                                                                                      views:@{@"v" : v,
+                                                                                              @"navigationBar" : self.navigationBarView}]];
         }];
     }
 }
@@ -459,7 +475,7 @@
         CGFloat distance = (SCREEN_SIZE.width/2) - self.navigationSideItemsStyle;
         CGSize vSize     = ([v isKindOfClass:[UILabel class]])? [self getLabelSize:(UILabel*)v] : v.frame.size;
         CGFloat originX  = ((SCREEN_SIZE.width/2 - vSize.width/2) + i*distance) - xOffset/(SCREEN_SIZE.width/distance);
-        v.frame          = (CGRect){originX, 8, vSize.width, vSize.height};
+        v.frame          = (CGRect){originX, self.navigationBarItemsTopMargin, vSize.width, vSize.height};
         i++;
     }];
 }

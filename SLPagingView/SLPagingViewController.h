@@ -28,6 +28,20 @@ typedef void(^SLPagingViewDidChanged)(NSInteger currentPage);
 
 @interface SLPagingViewController : UIViewController
 
+
+@property (nonatomic, assign) CGFloat pageControlTopMargin;
+
+@property (nonatomic, assign) CGFloat navigationBarHeight;
+
+@property (nonatomic, assign) CGFloat navigationBarItemsTopMargin;
+
+@property (nonatomic, assign) BOOL isNavigationBarStatic;
+
+@property (nonatomic, strong, readonly) UIPageControl *pageControl;
+
+
+@property (nonatomic, strong, readonly) UIView *navigationBarView;
+
 /*
  *  Delegate: Called when the user scroll horizontally
  *  Allow to redefine all behaviors + customized the navigation items

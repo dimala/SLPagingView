@@ -43,17 +43,27 @@
     UIImage *img3 = [UIImage imageNamed:@"chat"];
     img3 = [img3 imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 
-    SLPagingViewController *pageViewController = [[SLPagingViewController alloc] initWithNavBarItems:@[[[UIImageView alloc] initWithImage:img1], [[UIImageView alloc] initWithImage:img2], [[UIImageView alloc] initWithImage:img3]]
-                                                                                    navBarBackground:[UIColor whiteColor]
+    NSMutableArray *array = [[NSMutableArray alloc] init];
+
+    for (int i = 0; i < 3; ++i) {
+
+        UILabel *label = [[UILabel alloc] init];
+        label.text = [NSString stringWithFormat:@"page %i", i];
+        [array addObject:label];
+    }
+
+    SLPagingViewController *pageViewController = [[SLPagingViewController alloc] initWithNavBarItems:@[array[0], array[1], array[2]]
+                                                                                    navBarBackground:[UIColor lightGrayColor]
                                                                                                views:@[[self viewWithBackground:orange], [self viewWithBackground:[UIColor yellowColor]], [self viewWithBackground:gray]]
-                                                                                     showPageControl:NO];
+                                                                                     showPageControl:YES];
+    //pageViewController.isNavigationItemStatic = YES;
     pageViewController.navigationSideItemsStyle = SLNavigationSideItemsStyleOnBounds;
     float minX = 45.0;
     // Tinder Like
     pageViewController.pagingViewMoving = ^(NSArray *subviews){
         float mid  = [UIScreen mainScreen].bounds.size.width/2 - minX;
         float midM = [UIScreen mainScreen].bounds.size.width - minX;
-        for(UIImageView *v in subviews){
+        for(UILabel *v in subviews){
             UIColor *c = gray;
             if(v.frame.origin.x > minX
                && v.frame.origin.x < mid)
@@ -73,10 +83,15 @@
                                  goal:orange];
             else if(v.frame.origin.x == mid)
                 c = orange;
-            v.tintColor= c;
+            v.textColor = c;
         }
     };
-    
+
+//    pageViewController.navigationBarViewFrame = (CGRect){0, 200, self.window.frame.size.width, 70};
+    pageViewController.navigationBarItemsTopMargin = 20;
+    pageViewController.pageControlTopMargin = 10;
+    pageViewController.navigationBarHeight = 60;
+
     self.nav = [[UINavigationController alloc] initWithRootViewController:pageViewController];
     [self.window setRootViewController:self.nav];
     self.window.backgroundColor = [UIColor whiteColor];
@@ -88,7 +103,7 @@
 
 
 -(UIView*)viewWithBackground:(UIColor *)color{
-    UIView *v = [UIView new];
+    UIView *v = [[UIView alloc] initWithFrame:(CGRect){0,0, self.window.frame.size.width, 100}];
     v.backgroundColor = color;
     return v;
 }
