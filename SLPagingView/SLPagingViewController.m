@@ -435,10 +435,10 @@
             [self.view addSubview:self.navigationBarView];
             [self.navigationBarView setTranslatesAutoresizingMaskIntoConstraints:NO];
             // Oridnate constraint : set the space between the Top and the current view
-            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|[v][navigationBar(%f)]|", self.navigationBarHeight]
-                                                                                    options:0
-                                                                                    metrics:nil
-                                                                                      views:@{@"v" : v, @"navigationBar": self.navigationBarView}]];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|-(<=0)-[v][navigationBar(navigationBarHeight)]|"]
+                                                                              options:0
+                                                                              metrics:@{@"navigationBarHeight": @(self.navigationBarHeight) }
+                                                                                views:@{@"v" : v, @"navigationBar": self.navigationBarView}]];
             [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[navigationBar]|"
                                                                                     options:0
                                                                                     metrics:nil
