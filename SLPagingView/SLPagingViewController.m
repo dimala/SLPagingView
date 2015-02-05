@@ -435,15 +435,29 @@
             [self.view addSubview:self.navigationBarView];
             [self.navigationBarView setTranslatesAutoresizingMaskIntoConstraints:NO];
             // Oridnate constraint : set the space between the Top and the current view
-            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|-(<=0)-[v][navigationBar(navigationBarHeight)]|"]
+            UIView *view = [[UIView alloc] init];
+            [view setTranslatesAutoresizingMaskIntoConstraints:NO];
+            [self.view addSubview:view];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:|-(0)-[v][view(0)]|"]
+                                                                              options:0
+                                                                              metrics:nil
+                                                                                views:@{@"v" : v, @"view": view}]];
+            
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:[NSString stringWithFormat:@"V:[navigationBar(navigationBarHeight)]|"]
                                                                               options:0
                                                                               metrics:@{@"navigationBarHeight": @(self.navigationBarHeight) }
                                                                                 views:@{@"v" : v, @"navigationBar": self.navigationBarView}]];
+            
             [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[navigationBar]|"
-                                                                                    options:0
-                                                                                    metrics:nil
-                                                                                      views:@{@"v" : v,
-                                                                                              @"navigationBar" : self.navigationBarView}]];
+                                                                              options:0
+                                                                              metrics:nil
+                                                                                views:@{@"v" : v,
+                                                                                        @"navigationBar" : self.navigationBarView}]];
+            [self.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[view]|"
+                                                                              options:0
+                                                                              metrics:nil
+                                                                                views:@{
+                                                                                        @"view" : view}]];
         }];
     }
 }
