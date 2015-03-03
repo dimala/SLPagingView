@@ -91,6 +91,7 @@
             }
         }
     }
+    //[self adaptViews];
     return self;
 }
 
@@ -163,9 +164,9 @@
 
 - (void)loadView {
     [super loadView];
-
-
-
+    
+    
+    
     // Notify all conctrollers
     [self notifyControllers:NSSelectorFromString(@"loadView")
                      object:nil
@@ -187,6 +188,8 @@
     [self notifyControllers:NSSelectorFromString(@"viewDidAppear:")
                      object:@(animated)
                  checkIndex:YES];
+    [self adaptViews];
+    [self scrollViewDidScroll:self.scrollView];
 }
 
 -(void)viewDidAppear:(BOOL)animated{
@@ -213,12 +216,12 @@
                  checkIndex:NO];
     [self setCurrentIndex:self.indexSelected
                  animated:NO];
+    [self scrollViewDidScroll:self.scrollView];
 }
 
 -(void)dealloc{
     // Remove Observers
-    [[NSNotificationCenter defaultCenter]removeObserver:self
-                                             forKeyPath:UIDeviceOrientationDidChangeNotification];
+    [[NSNotificationCenter defaultCenter]removeObserver:self];
     // Close relationships
     _didChangedPage           = nil;
     _pagingViewMoving         = nil;
@@ -232,7 +235,7 @@
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-
+    
 }
 
 #pragma mark - public methods
@@ -278,7 +281,7 @@
     [self.controllerReferences addObject:controller];
     // Do we need to refresh the UI ?
     if(refresh)
-       [self setupPagingProcess];
+        [self setupPagingProcess];
 }
 
 #pragma mark - Internal methods
@@ -360,8 +363,10 @@
     self.scrollView.delegate                                  = self;
     self.scrollView.bounces                                   = NO;
     self.scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+    self.scrollView.userInteractionEnabled = YES;
     [self.scrollView setContentInset:UIEdgeInsetsMake(0, 0, -80, 0)];
     [self.view addSubview:self.scrollView];
+    
     
     // setup scrollview constraints
     // Width constraint, equal parent view width
@@ -387,13 +392,13 @@
         if(self.tintPageControlColor) self.pageControl.pageIndicatorTintColor = self.tintPageControlColor;
         [self.navigationBarView addSubview:self.pageControl];
     }
-
+    
     if (self.isNavigationBarStatic) {
         [self.navigationController.navigationBar addSubview:self.navigationBarView];
     } else {
         [self.view addSubview:self.navigationBarView];
     }
-
+    
 }
 
 // Add all views
@@ -402,7 +407,7 @@
        && self.viewControllers.count > 0){
         float width                 = SCREEN_SIZE.width * self.viewControllers.count;
         float height                = CGRectGetHeight(self.view.frame) - CGRectGetHeight(self.navigationBarView.frame);
-        self.scrollView.contentSize = (CGSize){width, height};
+        //        self.scrollView.contentSize = (CGSize){width, height};
         [self.viewControllers enumerateKeysAndObjectsUsingBlock:^(NSNumber *key, id obj, BOOL *stop) {
             UIView *v = (UIView*)obj;
             [self.scrollView addSubview:v];
@@ -416,22 +421,37 @@
                                                                        multiplier:1.0
                                                                          constant:0]];
             // Height constraint, half of parent view height
-//            [self.scrollView addConstraint:[NSLayoutConstraint constraintWithItem:v
-//                                                                        attribute:NSLayoutAttributeHeight
-//                                                                        relatedBy:NSLayoutRelationEqual
-//                                                                           toItem:self.scrollView
-//                                                                        attribute:NSLayoutAttributeHeight
-//                                                                       multiplier:1.0
-//                                                                         constant:0]];
+            [self.scrollView addConstraint:[NSLayoutConstraint constraintWithItem:v
+                                                                        attribute:NSLayoutAttributeHeight
+                                                                        relatedBy:NSLayoutRelationEqual
+                                                                           toItem:self.scrollView
+                                                                        attribute:NSLayoutAttributeHeight
+                                                                       multiplier:1.0
+                                                                         constant:0]];
             UIView *previous = [self.viewControllers objectForKey:[NSNumber numberWithFloat:([key intValue] - 1)]];
-            if(previous)
-                // Distance constraint: set distance between previous view and the current one
+            if(previous) {
                 [self.scrollView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[previous]-0-[v]"
                                                                                         options:0
                                                                                         metrics:nil
                                                                                           views:@{@"v" : v,
                                                                                                   @"previous" : previous}]];
-
+            } else {
+                [self.scrollView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[v]"
+                                                                                        options:0
+                                                                                        metrics:nil
+                                                                                          views:@{@"v" : v}]];
+            }
+            
+            if ([key isEqualToNumber:@(self.viewControllers.count - 1)]) {
+                [self.scrollView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:[v]|"
+                                                                                        options:0
+                                                                                        metrics:nil
+                                                                                          views:@{@"v" : v}]];
+            }
+            
+            // Distance constraint: set distance between previous view and the current one
+            
+            
             [self.view addSubview:self.navigationBarView];
             [self.navigationBarView setTranslatesAutoresizingMaskIntoConstraints:NO];
             // Oridnate constraint : set the space between the Top and the current view
@@ -458,8 +478,14 @@
                                                                               metrics:nil
                                                                                 views:@{
                                                                                         @"view" : view}]];
+            
         }];
     }
+}
+
+-(void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    self.scrollView.contentSize = CGSizeMake(self.view.frame.size.width * self.viewControllers.count, self.view.frame.size.height);
 }
 
 // Scroll to the view tapped
