@@ -257,6 +257,8 @@
     // Get the right position and update it
     CGFloat xOffset    = (index * ((int)SCREEN_SIZE.width));
     [self.scrollView setContentOffset:CGPointMake(xOffset, self.scrollView.contentOffset.y) animated:animated];
+    
+    [self.pageControl setCurrentPage:index];
 }
 
 -(void)addViewControllers:(UIViewController *) controller needToRefresh:(BOOL) refresh{
